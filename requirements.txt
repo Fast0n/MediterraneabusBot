@@ -1,0 +1,4 @@
+bs4
+json
+requests
+telepot
