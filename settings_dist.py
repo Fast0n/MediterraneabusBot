@@ -12,7 +12,7 @@ start_msg = "Benvenuto su @Mediterraneabus\_Bot\n"\
 client_file = "clients_id.txt"
 
 # hours
-orari = [
+hours = [
     ["Africo N. -farmacia", "Amendolea", "Anconi"],
     ["Antonimina", "Ardore - stazione FS", "Bagni Termali"],
     ["Belloro", "Benestare", "Bianco -piazza FS"],
@@ -51,3 +51,9 @@ orari = [
         "Svincolo S.G.C. Mammola"],
     ["Timpa B.", "Tre Arie "]
 ]
+
+# period
+period = {
+    "Scolastico": "invernale",
+    "Non scolastico": "estiva"
+}
