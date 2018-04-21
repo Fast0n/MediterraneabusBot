@@ -11,7 +11,7 @@ Ora i passeggeri della Mediterraneabus potranno controllare in tempo reale gli o
 
 ------------------------------------------------------------------------------------
 
-This bot is realized with [Telepot](https://github.com/nickoala/telepot).
+This bot is realized with [Telepot](https://github.com/nickoala/telepot) and [Mediterraneabus-api](https://github.com/fast0n/mediterraneabus-api).
 
 This is an unofficial bot developed to learn. Mediterraneabus S.p.A. is not responsible in any way.
 
