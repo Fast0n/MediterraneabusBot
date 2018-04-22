@@ -18,6 +18,7 @@ arr = {}
 
 markup = ReplyKeyboardMarkup(keyboard=hours)
 
+
 def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     command_input = msg['text']
@@ -102,57 +103,50 @@ def on_chat_message(msg):
                                 ' ', '%20') + "&percorso_linea1=" + arrivo[chat_id].replace(' ', '%20')
 
                         r = requests.get(URL, allow_redirects=True)
-                        open('__pycache__/' + str(chat_id) +
-                             '.json ', 'wb').write(r.content)
 
-                        with open('__pycache__/' + str(chat_id) + '.json ') as json_file:
-                            try:
-                                json_data = json.load(json_file)
-                                final_message = "🚏 Fermata *" + \
-                                    (partenza[chat_id]).upper() + \
-                                    "*\nOrari *solo* feriali da _LUN-SAB_"
-
-                                for key in json_data.keys():
-                                    for key1 in json_data[key].keys():
-                                        if key1 == partenza[chat_id]:
-                                            final_message += "\n\n" + \
-                                                key.replace("Linea", "*Linea") + \
-                                                "*\n🕜 hours "
-                                            for i in range(0, len(json_data[key][partenza[chat_id]])):
-                                                if json_data[key][partenza[chat_id]][i] != "":
-                                                    final_message += (
-                                                        "_" + json_data[key][partenza[chat_id]][i] + "_ - ")
-
-                                            final_message = final_message[:-3]
-                                            break
-
-                                        elif arrivo[chat_id].split("-")[0] in key1:
-                                            break
-                                # send messagge
-                                if final_message == "🚏 Fermata *" + (partenza[chat_id]).upper() + "*\nOrari *solo* feriali da _LUN-SAB_":
-                                    bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /hours", parse_mode='Markdown',
-                                                    reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                                else:
-                                    try:
-                                        # send location
-                                        response = requests.get(
-                                            'https://maps.googleapis.com/maps/api/geocode/json?address=' + partenza[chat_id].replace("-", " ") + ',+IT')
-                                        resp_json_payload = response.json()
-                                        a = str(
-                                            resp_json_payload['results'][0]['geometry']['location']).split(",")
-                                        latitude = a[0].replace("{'lat': ", "")
-                                        longitude = a[1].replace("'lng': ", "").replace(
-                                            " ", "").replace("}", "")
-                                        bot.sendLocation(chat_id, latitude, longitude, reply_markup=ReplyKeyboardRemove(
-                                            remove_keyboard=True))
-                                    except:
-                                        print("Error location")
-
-                                    bot.sendMessage(chat_id, final_message + "\n\n" + "Direzione *" + (
-                                        arrivo[chat_id]).upper() + "*", parse_mode='Markdown', reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                            except:
+                        try:
+                            json_data = json.loads(r.text)
+                            final_message = "🚏 Fermata *" + \
+                                (partenza[chat_id]).upper() + \
+                                "*\nOrari *solo* feriali da _LUN-SAB_"
+                            for key in json_data.keys():
+                                for key1 in json_data[key].keys():
+                                    if key1 == partenza[chat_id]:
+                                        final_message += "\n\n" + \
+                                            key.replace("Linea", "*Linea") + \
+                                            "*\n🕜 hours "
+                                        for i in range(0, len(json_data[key][partenza[chat_id]])):
+                                            if json_data[key][partenza[chat_id]][i] != "":
+                                                final_message += (
+                                                    "_" + json_data[key][partenza[chat_id]][i] + "_ - ")
+                                        final_message = final_message[:-3]
+                                        break
+                                    elif arrivo[chat_id].split("-")[0] in key1:
+                                        break
+                            # send messagge
+                            if final_message == "🚏 Fermata *" + (partenza[chat_id]).upper() + "*\nOrari *solo* feriali da _LUN-SAB_":
                                 bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /hours", parse_mode='Markdown',
                                                 reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                            else:
+                                try:
+                                    # send location
+                                    response = requests.get(
+                                        'https://maps.googleapis.com/maps/api/geocode/json?address=' + partenza[chat_id].replace("-", " ") + ',+IT')
+                                    resp_json_payload = response.json()
+                                    a = str(
+                                        resp_json_payload['results'][0]['geometry']['location']).split(",")
+                                    latitude = a[0].replace("{'lat': ", "")
+                                    longitude = a[1].replace("'lng': ", "").replace(
+                                        " ", "").replace("}", "")
+                                    bot.sendLocation(chat_id, latitude, longitude, reply_markup=ReplyKeyboardRemove(
+                                        remove_keyboard=True))
+                                except:
+                                    print("Error location")
+                                bot.sendMessage(chat_id, final_message + "\n\n" + "Direzione *" + (
+                                    arrivo[chat_id]).upper() + "*", parse_mode='Markdown', reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                        except:
+                            bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /hours", parse_mode='Markdown',
+                                            reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
                         return
 
         if arr[chat_id] == 3:
