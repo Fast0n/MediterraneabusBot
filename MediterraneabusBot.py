@@ -99,8 +99,9 @@ def on_chat_message(msg):
 
                         # take info from url
                         URL = "https://mediterraneabus-api.herokuapp.com/?periodo=" + \
-                            periodo[chat_id] + "&percorso_linea=" + partenza[chat_id].replace(
-                                ' ', '%20') + "&percorso_linea1=" + arrivo[chat_id].replace(' ', '%20')
+                            periodo[chat_id] + "&percorso_linea=" + \
+                            partenza[chat_id] + \
+                            "&percorso_linea1=" + arrivo[chat_id]
 
                         r = requests.get(URL)
                         try:
@@ -110,32 +111,16 @@ def on_chat_message(msg):
                                 (partenza[chat_id]).upper() + \
                                 "*\nOrari *solo* feriali da _LUN-SAB_"
 
-                            for a in json1:
-                                a1 = []
-                                b2 = []
-                                for b in json1[a]:
-                                    for c in b:
-                                        if c == partenza[chat_id]:
-                                            for i in range(len(b[c])):
-                                                if b[c][i] != "":
-                                                    a1.append(b[c][i])
-                                        if c == arrivo[chat_id]:
-                                            for i in range(len(b[c])):
-                                                if b[c][i] != "":
-                                                    b2.append(b[c][i])
-                                try:
-                                    for i in range(len(a1)):
-                                        if i == 0 and a1[i] < b2[i]:
-                                            final_message += "\n\n" + \
-                                                a.replace(
-                                                    "Linea", "*Linea") + "*\n🕜 Orari "
-                                        if a1[i] < b2[i]:
-                                            final_message += (
-                                                "_" + a1[i] + "_ ")
-                                except:
-                                    bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /orari", parse_mode='Markdown',
-                                                    reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                            
+                            for z in range(len(json1['linee'])):
+                                final_message += "\n\n" + (json1['linee'][z]['corsa']).replace(
+                                    "Linea", "*Linea") + "*\n🕜 Orari "
+                                for x in range(len(json1['linee'][z]['orari'])):
+                                    final_message += "_" + \
+                                        json1['linee'][z]['orari'][x]['partenza'] + " _ - "
+
+                                    if x + 1 == len(json1['linee'][z]['orari']):
+                                        final_message = final_message[:-3]
+
                             try:
                                 # send location
                                 response = requests.get(
@@ -151,13 +136,10 @@ def on_chat_message(msg):
                             except:
                                 pass
 
-                            # send messagge
-                            if final_message == "🚏 Fermata *" + (partenza[chat_id]).upper() + "*\nOrari *solo* feriali da _LUN-SAB_":
-                                bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /orari", parse_mode='Markdown',
-                                                reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-
-                            bot.sendMessage(chat_id, final_message + "\n\n" + "Direzione *" + (
-                                arrivo[chat_id]).upper() + "*", parse_mode='Markdown', reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                            bot.sendMessage(
+                                chat_id, final_message + "\n\nDirezione *" + (
+                                    arrivo[chat_id]).upper() + "*", parse_mode='Markdown', reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                            return
 
                         except:
                             bot.sendMessage(chat_id, "*Errore Orario! Non trovato*\nSe desideri cercare un nuovo orario clicca su /orari", parse_mode='Markdown',
