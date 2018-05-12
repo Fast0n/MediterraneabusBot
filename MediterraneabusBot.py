@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from settings import token, client_file, start_msg, hours, period
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from time import sleep
+from random import randint
 import json
 import os
 import requests
@@ -43,6 +44,10 @@ def on_chat_message(msg):
         ])
         bot.sendMessage(chat_id, "Codice sorgente: \n" +
                         "[MediterraneabusBot](https://github.com/Fast0n/MediterraneabusBot)\n\n" +
+                        "App Android: \n" +
+                        "[Mediterraneabus App](https://play.google.com/store/apps/details?id=com.fast0n.mediterraneabus)\n\n" +
+                        "Instagram: \n" +
+                        "[Mediterraneabus](instagram.com/mediterraneabus)\n\n" +
                         "Sviluppato da: \n" +
                         "[Fast0n](https://github.com/Fast0n)\n\n" +
                         "🍺 Se sei soddisfatto offri una birra allo sviluppatore 🍺", parse_mode='Markdown', reply_markup=keyboard)
@@ -139,6 +144,25 @@ def on_chat_message(msg):
                             bot.sendMessage(
                                 chat_id, final_message + "\n\nDirezione *" + (
                                     arrivo[chat_id]).upper() + "*", parse_mode='Markdown', reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                                                     
+                            random = randint(1, 3);
+                            if random == 1:
+                             bot.sendMessage(
+                                chat_id, "Sei un utente Android?\n\nScarica l'app [Mediterraneabus](https://play.google.com/store/apps/details?id=com.fast0n.mediterraneabus)", parse_mode='Markdown')
+                            elif random == 2:
+                               keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [InlineKeyboardButton(
+                                    text="Dona", url='https://paypal.me/Fast0n/')],
+                            ])
+                            bot.sendMessage(chat_id, "Codice sorgente: \n" +
+                                            "[MediterraneabusBot](https://github.com/Fast0n/MediterraneabusBot)\n\n" +
+                                            "Instagram: \n" +
+                                            "[Mediterraneabus](instagram.com/mediterraneabus)\n\n" +
+                                            "Sviluppato da: \n" +
+                                            "[Fast0n](https://github.com/Fast0n)\n\n" +
+                                            "🍺 Se sei soddisfatto offri una birra allo sviluppatore 🍺", parse_mode='Markdown', reply_markup=keyboard)
+                            user_state[chat_id] = 0
+                            
                             return
 
                         except:
