@@ -1,4 +1,4 @@
 bs4
-json
 requests
+simplejson
 telepot
