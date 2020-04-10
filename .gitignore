@@ -1,9 +1,4 @@
 __pycache__
 settings.py
 *.DS_Store
-clients_id.txt
-*.html
-*.pyc
-*.swp
-*.json
-file_raw/.DS_Store
+env
