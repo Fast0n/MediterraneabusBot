@@ -9,7 +9,7 @@ from telegram import (ParseMode, MessageEntity, ChatAction,
 from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
                           MessageHandler, Updater, ConversationHandler)
 
-from settings import token, client_file, start_msg, periodList, url_api
+from settings import token, start_msg, periodList, url_api
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
