@@ -27,11 +27,12 @@ def markup_test():
     while len(arr) > 2:
         pice = arr[:2]
         arrs.append(pice)
-        arr = arr[1:]
+        arr = arr[2:]
     arrs.append(arr)
     return arrs
 
 
+reply_keyboard = markup_test()
 def start(update, context):
     """Send starting message"""
     update.message.reply_text(start_msg,  parse_mode=ParseMode.MARKDOWN)
@@ -48,7 +49,6 @@ def period(update, context):
 def departure(update, context):
     context.user_data['period'] = update.message.text
 
-    reply_keyboard = markup_test()
     update.message.reply_text("Seleziona la partenza",  parse_mode=ParseMode.MARKDOWN,
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
 
@@ -59,7 +59,6 @@ def arrival(update, context):
     # check field
     hours_raw = json.loads(requests.get(url_api + "?lista").text)
     hours = hours_raw["list"]["routes"]
-    reply_keyboard = markup_test()
 
     context.user_data['departure'] = update.message.text
     for i in range(0, len(hours)):
@@ -71,14 +70,13 @@ def arrival(update, context):
 
         elif i == len(hours)-1 and context.user_data['departure'] != hours[len(hours)-1]:
             update.message.reply_text("Seleziona la partenza dalla tastiera",  parse_mode=ParseMode.MARKDOWN,
-                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
 
 
 def makelist(update, context):
     # check field
     hours_raw = json.loads(requests.get(url_api + "?lista").text)
     hours = hours_raw["list"]["routes"]
-    reply_keyboard = markup_test()
 
     context.user_data['arrival'] = update.message.text
     for i in range(0, len(hours)):
@@ -107,7 +105,7 @@ def makelist(update, context):
                         "Linea", "*Linea") + "*\n🕜 Orario " + json1[z]['b'] + " - " + json1[z]['c']
 
                 # send location
-                URL = "https://github.com/Fast0n/MediterraneabusBot/blob/master/geocode.csv"
+                URL = "https://raw.githubusercontent.com/Fast0n/MediterraneabusBot/master/geocode.csv"
                 r = requests.get(URL)
                 for row in range(0, len((r.text.split("\n")))):
                     a = r.text.split("\n")
@@ -116,11 +114,12 @@ def makelist(update, context):
                         latitude = b[0]
                         longitude = b[1]
 
-                context.bot.send_location(
-                    chat_id=update.message.chat_id, latitude=latitude, longitude=longitude)
                 update.message.reply_text(final_message + "\n\nDirezione *" + (
                     context.user_data['arrival']).upper() + "*",  parse_mode=ParseMode.MARKDOWN,
                     reply_markup=ReplyKeyboardRemove())
+
+                context.bot.send_location(
+                    chat_id=update.message.chat_id, latitude=latitude, longitude=longitude)
 
             except Exception as e:
                 print(str(e))
