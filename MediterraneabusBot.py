@@ -33,6 +33,8 @@ def markup_test():
 
 
 reply_keyboard = markup_test()
+
+
 def start(update, context):
     """Send starting message"""
     update.message.reply_text(start_msg,  parse_mode=ParseMode.MARKDOWN)
@@ -97,29 +99,34 @@ def makelist(update, context):
             r = requests.get(URL)
             try:
                 json1 = json.loads(r.text)
-                final_message = "🚏 Fermata *" + \
-                    (context.user_data['departure']).upper() + \
-                    "*\nOrari *solo* feriali da _LUN-SAB_"
-                for z in range(len(json1)):
-                    final_message += "\n\n" + (json1[z]['a']).replace(
-                        "Linea", "*Linea") + "*\n🕜 Orario " + json1[z]['b'] + " - " + json1[z]['c']
+                print(json1)
+                if json1 == []:
+                    update.message.reply_text("*Non è stato trovato nessun risultato*",  parse_mode=ParseMode.MARKDOWN,
+                                              reply_markup=ReplyKeyboardRemove())
+                else:
+                    final_message = "🚏 Fermata *" + \
+                        (context.user_data['departure']).upper() + \
+                        "*\nOrari *solo* feriali da _LUN-SAB_"
+                    for z in range(len(json1)):
+                        final_message += "\n\n" + (json1[z]['a']).replace(
+                            "Linea", "*Linea") + "*\n🕜 Orario " + json1[z]['b'] + " - " + json1[z]['c']
 
-                # send location
-                URL = "https://raw.githubusercontent.com/Fast0n/MediterraneabusBot/master/geocode.csv"
-                r = requests.get(URL)
-                for row in range(0, len((r.text.split("\n")))):
-                    a = r.text.split("\n")
-                    b = a[row].split(",")
-                    if context.user_data['departure'] in b[2]:
-                        latitude = b[0]
-                        longitude = b[1]
+                    # send location
+                    URL = "https://raw.githubusercontent.com/Fast0n/MediterraneabusBot/master/geocode.csv"
+                    r = requests.get(URL)
+                    for row in range(0, len((r.text.split("\n")))):
+                        a = r.text.split("\n")
+                        b = a[row].split(",")
+                        if context.user_data['departure'] in b[2]:
+                            latitude = b[0]
+                            longitude = b[1]
 
-                update.message.reply_text(final_message + "\n\nDirezione *" + (
-                    context.user_data['arrival']).upper() + "*",  parse_mode=ParseMode.MARKDOWN,
-                    reply_markup=ReplyKeyboardRemove())
+                    update.message.reply_text(final_message + "\n\nDirezione *" + (
+                        context.user_data['arrival']).upper() + "*",  parse_mode=ParseMode.MARKDOWN,
+                        reply_markup=ReplyKeyboardRemove())
 
-                context.bot.send_location(
-                    chat_id=update.message.chat_id, latitude=latitude, longitude=longitude)
+                    context.bot.send_location(
+                        chat_id=update.message.chat_id, latitude=latitude, longitude=longitude)
 
             except Exception as e:
                 print(str(e))
