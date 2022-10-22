@@ -10,7 +10,7 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from pid.decorator import pidfile
-from telegram import (ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove,
+from telegram import (Bot, ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove,
                       Update)
 from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, Updater)
@@ -26,6 +26,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 DEPARTURE, ARRIVAL, MAKELIST = range(3)
+
+bot = Bot(token)
 
 
 def generateJsonSelect():
@@ -56,7 +58,7 @@ def generateJsonSelect():
 
         delta = d2 - d1
 
-        if delta.days == 0:
+        if delta.days == 5:
             os.remove(os.getcwd() + "/data.json")
             return generateJsonSelect()
         else:
@@ -81,7 +83,7 @@ def markup_departure():
 
 
 markup_departure = ReplyKeyboardMarkup(
-    markup_departure(), one_time_keyboard=True, resize_keyboard=True)
+    markup_departure(), one_time_keyboard=True, resize_keyboard=True, )
 
 
 def startHandler(update: Update, _):
@@ -90,16 +92,21 @@ def startHandler(update: Update, _):
 
 
 def departure(update: Update, context):
-    update.message.reply_text("Seleziona la partenza",
-                              parse_mode=ParseMode.MARKDOWN, reply_markup=markup_departure)
+    context.user_data['last_message'] = bot.send_message(
+        chat_id=update.message.chat_id, text="Seleziona la partenza",
+        parse_mode=ParseMode.MARKDOWN, reply_markup=markup_departure)
     update.message.delete()
     return ARRIVAL
 
 
 def arrival(update: Update, context):
+    last_message = context.user_data['last_message']
+    bot.delete_message(
+        chat_id=update.effective_chat.id, message_id=last_message.message_id)
+    update.message.delete()
+
     try:
         context.user_data['departure'] = update.message.text
-        update.message.delete()
         json_list = generateJsonSelect()
 
         arrs = []
@@ -118,8 +125,12 @@ def arrival(update: Update, context):
         markup_arrival = ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-        update.message.reply_text("Seleziona l'arrivo",
-                                  parse_mode=ParseMode.MARKDOWN, reply_markup=markup_arrival)
+        context.user_data['last_message'] = bot.send_message(
+            chat_id=update.message.chat_id,
+
+            text="Seleziona l'arrivo", parse_mode=ParseMode.MARKDOWN,
+            reply_markup=markup_arrival
+        )
 
         return MAKELIST
     except:
@@ -127,10 +138,12 @@ def arrival(update: Update, context):
 
 
 def makelist(update, context):
-
-    context.user_data['arrival'] = update.message.text
+    last_message = context.user_data['last_message']
+    bot.delete_message(
+        chat_id=update.effective_chat.id, message_id=last_message.message_id)
     update.message.delete()
 
+    context.user_data['arrival'] = update.message.text
     # take info from url
     URL = f"https://api.mediterraneabus.com/search/weekly?departure={context.user_data['departure']}&arrival={context.user_data['arrival']}&excludeExternals=false"
 
@@ -160,9 +173,11 @@ def makelist(update, context):
 
             final_message += f"\n\n🚌{departureName}\n📍{arrivalName}*\n🕜 Orario {departureTime} - {arrivalTime}*"
 
-        update.message.reply_text(final_message + "\n\nDirezione *" + (
-            context.user_data['arrival']).upper() + "*",  parse_mode=ParseMode.MARKDOWN,
-            reply_markup=ReplyKeyboardRemove())
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=final_message + "\n\nDirezione *" + (
+                context.user_data['arrival']).upper() + "*",  parse_mode=ParseMode.MARKDOWN, reply_markup=ReplyKeyboardRemove()
+        )
 
     return ConversationHandler.END
 
