@@ -15,7 +15,7 @@ from telegram import (Bot, ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove,
 from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, Updater)
 
-from config import start_msg, token
+from config import start_msg, token, website_url, api_url
 
 # Enable logging
 logging.basicConfig(
@@ -33,7 +33,7 @@ bot = Bot(token)
 def generateJsonSelect():
 
     if not Path(os.getcwd() + "/data.json").is_file():
-        url = "https://www.mediterraneabus.com/"
+        url = f"https://{website_url}/"
         response = requests.request("GET", url)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -44,27 +44,15 @@ def generateJsonSelect():
                     "connections\[widget_id\] = \[(.*)\]", str(item))[0]
 
                 obj = open(os.getcwd() + "/data.json", "w")
-                obj.write(json.dumps(json.loads("["+script+"]")))
+                obj.write(json.dumps(json.loads("["+script+"]"), indent=3))
                 obj.close()
                 with open(os.getcwd() + "/data.json", "r") as f:
                     readData = json.load(f)
                 return(readData)
     else:
-        str_d1 = time.ctime(os.path.getctime(os.getcwd() + "/data.json"))
-        str_d2 = time.strftime("%a %b %d %H:%M:%S %Y")
 
-        d1 = datetime.strptime(str_d1, "%a %b %d %H:%M:%S %Y")
-        d2 = datetime.strptime(str(str_d2), "%a %b %d %H:%M:%S %Y")
-
-        delta = d2 - d1
-
-        if delta.days == 5:
-            os.remove(os.getcwd() + "/data.json")
-            return generateJsonSelect()
-        else:
-            with open(os.getcwd() + "/data.json", "r") as f:
-                readData = json.load(f)
-            return(readData)
+        os.remove(os.getcwd() + "/data.json")
+        return generateJsonSelect()
 
 
 def markup_departure():
@@ -74,10 +62,12 @@ def markup_departure():
     for i in range(len(json_list)):
         arrs.append(json_list[i]['description'])
 
-    n = int(len(arrs)/3)
-    reply_keyboard = [[] for _ in range(n)]
-    for index, item in enumerate(arrs):
-        reply_keyboard[index % n].append(item)
+    reply_keyboard = []
+    while len(arrs) > 3:
+        pice = arrs[:3]
+        reply_keyboard.append(pice)
+        arrs = arrs[3:]
+    reply_keyboard.append(arrs)
 
     return reply_keyboard
 
@@ -145,7 +135,7 @@ def makelist(update, context):
 
     context.user_data['arrival'] = update.message.text
     # take info from url
-    URL = f"https://api.mediterraneabus.com/search/weekly?departure={context.user_data['departure']}&arrival={context.user_data['arrival']}&excludeExternals=false"
+    URL = f"https://{api_url}/search/weekly?departure={context.user_data['departure']}&arrival={context.user_data['arrival']}&excludeExternals=false"
 
     response = requests.get(URL).json()
     result = json.loads(json.dumps(response))
@@ -158,15 +148,8 @@ def makelist(update, context):
 
         for i in range(len(result)):
 
-            departureName = result[i]['data']['departure']
-            arrivalName = result[i]['data']['arrival']
-
-            for j in range(len(result[i]['routes'][0]['stops'])):
-                if result[i]['routes'][0]['stops'][j]['stopId'] == departureName:
-                    departureName = result[i]['routes'][0]['stops'][j]['description']
-
-                if result[i]['routes'][0]['stops'][j]['stopId'] == arrivalName:
-                    arrivalName = result[i]['routes'][0]['stops'][j]['description']
+            departureName = getNameByID(result[i]['data']['departure'])
+            arrivalName = getNameByID(result[i]['data']['arrival'])
 
             departureTime = f"{str(result[i]['data']['departureTime']['hours']).zfill(2)}:{str(result[0]['data']['departureTime']['minutes']).zfill(2)}"
             arrivalTime = f"{str(result[i]['data']['arrivalTime']['hours']).zfill(2)}:{str(result[0]['data']['arrivalTime']['minutes']).zfill(2)}"
@@ -190,6 +173,22 @@ def dona(update, context):
                               "Sviluppato da: \n" +
                               "[Fast0n](https://github.com/Fast0n)\n\n" +
                               "🍺 Se sei soddisfatto offri una birra allo sviluppatore 🍺", parse_mode=ParseMode.MARKDOWN, reply_markup=ReplyKeyboardRemove())
+
+
+def getNameByID(ID):
+    url = f"https://{api_url}/Stops/manyById"
+
+    payload = json.dumps(f"{ID}")
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
+
+    response = requests.request(
+        "POST", url, headers=headers, data=payload).json()
+    result = json.loads(json.dumps(response))
+    return result[0]["shortDescription"]
 
 
 @ pidfile('/tmp/Mediterraneabus.pid')
